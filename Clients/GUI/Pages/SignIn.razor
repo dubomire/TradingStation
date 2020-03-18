@@ -1,32 +1,41 @@
 ﻿@page "/signin"
 @using GUIModels
 @using Auth
+@using System.Net
+@using System.Text.Json
+@using System.IO
+@using System.Text.Json.Serialization;
 @inject AuthStateProvider AuthenticationProvider
 @inject NavigationManager NavigationManager
 
-<div class="col-12">
-    <h3><b>Sign In</b></h3>
-    <hr />
+    <h3 class="hid">Неверный логин или пароль</h3>
+    <div class="col-12">
+        <h3><b>Sign In</b></h3>
+        <hr />
+        <EditForm EditContext="@_editContext" OnValidSubmit="@TrySignIn">
+            <DataAnnotationsValidator />
+            <div class="form-group">
+                <label for="Email">Email</label>
+                <InputText class="form-control col-3" @bind-Value="userInput.Email" placeholder="example@gmail.com" />
+                <ValidationMessage For="() => userInput.Email" />
+            </div>
+            <br />
+            <div class="form-group">
+                <label for="Password">Password</label>
+                <InputText class="form-control col-3" @bind-Value="userInput.Password" placeholder="*****" />
+                <ValidationMessage For="() => userInput.Password" />
+            </div>
 
-    <EditForm EditContext="@_editContext" OnValidSubmit="@TrySignIn">
-        <DataAnnotationsValidator />
+            <input type="submit" class="form-control col-1 button btn-primary" value="Sign in" />
 
-        <div class="form-group">
-            <label for="Email">Email</label>
-            <InputText class="form-control col-3" @bind-Value="userInput.Email" placeholder="example@gmail.com" />
-            <ValidationMessage For="() => userInput.Email" />
-        </div>
-        <br />
-        <div class="form-group">
-            <label for="Password">Password</label>
-            <InputText class="form-control col-3" @bind-Value="userInput.Password" placeholder="*****" />
-            <ValidationMessage For="() => userInput.Password" />
-        </div>
-
-        <input type="submit" class="form-control col-1 button btn-primary" value="Sign in" />
-
-    </EditForm>
-</div>
+        </EditForm>
+    </div>
+    <style>
+        .hid {
+            display: @isHidden;
+            color: #ff0000;
+        }
+    </style>
 
 
 @code {
@@ -35,12 +44,12 @@
 
     private SignInData userInput;
     private EditContext _editContext;
-
+    private string isHidden = "none";
     private void TrySignIn()
     {
         // var checkedUser = await UserService.Check(user)
         // if != null
-        if (userInput.Email == "root" && userInput.Password == "root")
+        /*if (userInput.Email == "root" && userInput.Password == "root")
         {
             AuthenticationProvider.MarkSignedIn();
             NavigationManager.NavigateTo("userinfo");
@@ -49,6 +58,29 @@
         {
             // handle incorrect input
             // TODO: add custom validator? 
+        }*/
+
+        
+        WebRequest request = WebRequest.Create("http://localhost:5002/authentication/login");
+        request.Method = "POST";
+        //request.ContentLength = req.Length;
+        request.ContentType = "application/json";
+        Stream dataStream = request.GetRequestStream();
+        StreamWriter strWrt = new StreamWriter(dataStream);
+        strWrt.Write(JsonSerializer.Serialize<SignInData>(userInput));
+        strWrt.Close();
+        dataStream.Close();
+        WebResponse response = request.GetResponse();
+
+        if (((HttpWebResponse)response).StatusCode == HttpStatusCode.OK)
+        {
+            AuthenticationProvider.MarkSignedIn();
+            NavigationManager.NavigateTo("userinfo");
+        } else
+        {
+            userInput.Email = "";
+            userInput.Password = "";
+            isHidden = "block";
         }
     }
 
