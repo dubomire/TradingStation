@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using DTO;
 using Microsoft.AspNetCore.Mvc;
@@ -14,7 +15,7 @@ namespace UserService.Controllers
     {
         [Route("EditUser")]
         [HttpPost]
-        public string EditUser([FromServices] IEditUser command, [FromBody] User user)
+        public HttpStatusCode EditUser([FromServices] IEditUser command, [FromBody] User user)
         {
             return command.Execute();
         }
