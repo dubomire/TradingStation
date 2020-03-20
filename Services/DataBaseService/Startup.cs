@@ -1,3 +1,6 @@
+using DataBaseService.DbModels;
+using DataBaseService.Interfaces;
+using DTO;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -12,6 +15,16 @@ namespace DataBaseService
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddDbContext<DataBaseServiceContext>();
+
+            #region Repositories
+            services.AddSingleton<IRepository<User>>();
+            services.AddTransient<IMapper<User, DbUser>>();
+
+            // next repository with his mapper
+            //services.AddSingleton<IRepository<User>>();            
+            //services.AddTransient<IMapper<User, DbUser>>();
+            #endregion
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
